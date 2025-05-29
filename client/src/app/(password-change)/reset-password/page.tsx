@@ -1,21 +1,19 @@
 "use client";
+import { Button } from "@/components/ui/button";
+import { Formik, Field, Form, ErrorMessage } from "formik";
+import { ChevronLeft } from "lucide-react";
 import * as Yup from "yup";
 import { useState } from "react";
-import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { signIn } from "@/utils/EmailController";
-import { Formik, Field, Form, ErrorMessage } from "formik";
+import { requestPasswordReset } from "@/utils/EmailController";
 
-const LogInSchema = Yup.object().shape({
+const ResetPasswordSchema = Yup.object().shape({
   email: Yup.string()
     .email("Please enter a valid email address")
     .required("Email is required"),
-  password: Yup.string().required("Password is required"),
 });
 
-const UserLogin = () => {
+const ResetPasswordPage = () => {
   const [email, setEmail] = useState("");
   const [isValid, setIsValid] = useState(true);
   const { push } = useRouter();
@@ -37,27 +35,23 @@ const UserLogin = () => {
         <ChevronLeft size={36} />
       </Button>
 
-      <p className="font-semibold text-24px">Log in </p>
+      <p className="font-semibold text-24px"> Reset your password </p>
       <p className="font-normal text-[16px] text-[#71717A]">
-        Log in to enjoy your favorite dishes.
+        Enter your email to receive a password reset link.{" "}
       </p>
 
       <Formik
         initialValues={{
           email: "",
-          password: "",
         }}
-        validationSchema={LogInSchema}
+        validationSchema={ResetPasswordSchema}
         onSubmit={async (values, { setSubmitting, setErrors }) => {
           try {
-            const response = await signIn(values);
-            if (response.newtokenForSignin) {
-              localStorage.setItem("token", response.newtokenForSignin);
-            }
+            await requestPasswordReset(values.email);
             push("/");
           } catch (error: any) {
             setErrors({
-              email: error.response?.data?.message || "Signup failed",
+              email: error.response?.data?.message || "failed",
             });
           } finally {
             setSubmitting(false);
@@ -81,29 +75,13 @@ const UserLogin = () => {
               />
             </div>
 
-            <div>
-              <Field
-                as={Input}
-                name="password"
-                type="password"
-                placeholder="Enter your password"
-                className="border rounded-md px-3 py-2 w-104"
-              />
-              <ErrorMessage
-                name="password"
-                component="div"
-                className="text-red-500 text-sm"
-              />
-            </div>
-
-            <a href="http://localhost:3000/reset-password">Forgot password ?</a>
-
             <Button
               className="h-9 px-8 bg-[#18181B] hover:opacity-25"
               type="submit"
+              onClick={() => push("/verify-email")}
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Signing In..." : "Let's Go"}
+              {isSubmitting ? "..." : "Send link"}
             </Button>
           </Form>
         )}
@@ -119,4 +97,4 @@ const UserLogin = () => {
   );
 };
 
-export default UserLogin;
+export default ResetPasswordPage;

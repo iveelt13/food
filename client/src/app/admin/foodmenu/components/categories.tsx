@@ -26,43 +26,73 @@ type AllFoodCategories = {
 
 export const CategoriesForAdmin = () => {
   const { push } = useRouter();
+  const [isOpen, setIsOpen] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [categoryName, setCategoryName] = useState("");
   const [data, setData] = useState<FoodCategory[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get<AllFoodCategories>(
+        "http://localhost:8000/food-category"
+      );
+      setData(response.data?.categories || []);
+    } catch (error: any) {
+      setError(error.message || "Failed to fetch data");
+    }
+  };
+
   useEffect(() => {
-    axios<AllFoodCategories>(`http://localhost:8000/food-category`)
-      .then((res) => {
-        setData(res.data?.categories);
-        setLoading(false);
-      })
-      .catch((error) => {
-        setError(error.message);
-        setLoading(false);
-      });
+    fetchCategories();
   }, []);
+
+  const handleAddCategory = async () => {
+    if (!categoryName.trim()) return;
+    setIsOpen(true);
+    try {
+      const token =
+        typeof window !== "undefined" && localStorage.getItem("token");
+
+      await axios.post(
+        "http://localhost:8000/food-category",
+        { categoryName },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      alert("New Category is being added to the menu");
+
+      setCategoryName("");
+      setIsOpen(false);
+    } catch (error) {
+      console.error("Failed to add category:", error);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-4 p-6 bg-[#FFFFFF] border rounded-xl w-230">
       <h4 className="font-semibold text-[20px]">Dishes category</h4>
-      <div className="flex gap-4">
-        <Button className="border rounded-full bg-white text-black border-[#E4E4E7] justify-center items-center cursor-pointer">
+
+      <div className="flex gap-4 flex-wrap">
+        <Button className="border rounded-full bg-white text-black border-[#E4E4E7]">
           All Dishes
         </Button>
+
         {data.map((category) => (
           <Button
             key={category._id}
-            className="border rounded-full bg-white text-black border-[#E4E4E7] justify-center items-center cursor-pointer"
+            className="border rounded-full bg-white text-black border-[#E4E4E7]"
           >
             {category.categoryName}
           </Button>
         ))}
-        <Dialog>
+
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button
-              variant="outline"
-              className="border rounded-full flex bg-[#EF4444] text-white"
-            >
+            <Button className="border rounded-full bg-[#EF4444] text-white px-4">
               +
             </Button>
           </DialogTrigger>
@@ -72,26 +102,27 @@ export const CategoriesForAdmin = () => {
             </DialogHeader>
 
             <div className="flex flex-col gap-5">
-              <Label className="items-start">Category name</Label>
-              <Input id="name" placeholder="Type category name..." />
+              <Label>Category name</Label>
+              <Input
+                value={categoryName}
+                onChange={(e) => setCategoryName(e.target.value)}
+                placeholder="Type category name..."
+              />
             </div>
+
             <DialogFooter>
-              <Button type="submit">Add category</Button>
+              <Button
+                onClick={handleAddCategory}
+                disabled={!categoryName.trim() || adding}
+              >
+                {adding ? "Adding..." : "Add category"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
-
-      {/* <div className="flex flex-col gap-4">
-        {data.slice(5, 10).map((category) => (
-          <p
-            key={category._id}
-            className="cursor-pointer hover:underline text-white"
-          >
-            {category.categoryName}
-          </p>
-        ))}
-      </div> */}
     </div>
   );
 };
+
+export default CategoriesForAdmin;

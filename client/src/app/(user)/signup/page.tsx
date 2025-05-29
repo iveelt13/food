@@ -1,35 +1,23 @@
 "use client";
 import * as Yup from "yup";
-import { useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { signIn } from "@/utils/EmailController";
+import { signUp } from "@/utils/EmailController";
 import { Formik, Field, Form, ErrorMessage } from "formik";
 
-const LogInSchema = Yup.object().shape({
+const SignupSchema = Yup.object().shape({
   email: Yup.string()
     .email("Please enter a valid email address")
     .required("Email is required"),
-  password: Yup.string().required("Password is required"),
+  password: Yup.string()
+    .min(6, "Password must be at least 6 characters")
+    .required("Password is required"),
 });
 
-const UserLogin = () => {
-  const [email, setEmail] = useState("");
-  const [isValid, setIsValid] = useState(true);
+const SignUpEmail = () => {
   const { push } = useRouter();
-
-  const emailValidation = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setEmail(value);
-    setIsValid(emailValidation(value));
-  };
 
   return (
     <div className="w-104 flex flex-col gap-6 ">
@@ -37,9 +25,9 @@ const UserLogin = () => {
         <ChevronLeft size={36} />
       </Button>
 
-      <p className="font-semibold text-24px">Log in </p>
+      <p className="font-semibold text-24px">Create your account</p>
       <p className="font-normal text-[16px] text-[#71717A]">
-        Log in to enjoy your favorite dishes.
+        Sign up to explore your favorite dishes.
       </p>
 
       <Formik
@@ -47,17 +35,14 @@ const UserLogin = () => {
           email: "",
           password: "",
         }}
-        validationSchema={LogInSchema}
+        validationSchema={SignupSchema}
         onSubmit={async (values, { setSubmitting, setErrors }) => {
           try {
-            const response = await signIn(values);
-            if (response.newtokenForSignin) {
-              localStorage.setItem("token", response.newtokenForSignin);
-            }
+            await signUp(values);
             push("/");
-          } catch (error: any) {
+          } catch (err: any) {
             setErrors({
-              email: error.response?.data?.message || "Signup failed",
+              email: err.response?.data?.message || "Signup failed",
             });
           } finally {
             setSubmitting(false);
@@ -96,27 +81,24 @@ const UserLogin = () => {
               />
             </div>
 
-            <a href="http://localhost:3000/reset-password">Forgot password ?</a>
-
             <Button
               className="h-9 px-8 bg-[#18181B] hover:opacity-25"
               type="submit"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Signing In..." : "Let's Go"}
+              {isSubmitting ? "Signing Up..." : "Let's Go"}
             </Button>
           </Form>
         )}
       </Formik>
 
-      <div className="flex gap-3 justify-center">
-        <p>Don't have an account?</p>
-        <a href="http://localhost:3000/signup" className="text-blue-600">
-          Sign up
+      <div className="flex gap-3">
+        <p>Already have an account?</p>
+        <a href="http://localhost:3000/login" className="text-blue-600">
+          Log in
         </a>
       </div>
     </div>
   );
 };
-
-export default UserLogin;
+export default SignUpEmail;

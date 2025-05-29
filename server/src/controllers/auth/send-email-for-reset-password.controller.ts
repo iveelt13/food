@@ -23,7 +23,6 @@ export const SendEmailForResetPasswordController = async (
   }
 
   const token = generateNewTokenForReset({ userId: existingUser._id });
-
   sendUserVerificationLink(
     `${req.protocol}://${req.get("host")}/auth/verify-email?token=${token}`,
     email

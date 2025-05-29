@@ -102,6 +102,8 @@ export const AdminOrderDashboard = () => {
     return orderDate >= dateRange.from && orderDate <= dateRange.to;
   });
 
+  console.log({ filteredOrders });
+
   return (
     <div className="p-6 space-y-4 border border-[#E4E4E7] bg-white rounded-lg w-290">
       <div className="flex justify-between">

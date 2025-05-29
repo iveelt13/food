@@ -2,13 +2,13 @@ import { FoodCategoryModel } from "../../models";
 import { Request, Response } from "express";
 
 type CategoryBody = {
-  catergoryName: string;
+  categoryName: string;
 };
 
 export const CategoryCreateController = async (req: Request, res: Response) => {
-  const { catergoryName } = req.body as CategoryBody;
+  const { categoryName } = req.body as CategoryBody;
 
-  const existingCategory = await FoodCategoryModel.findOne({ catergoryName });
+  const existingCategory = await FoodCategoryModel.findOne({ categoryName });
 
   if (existingCategory) {
     res.status(400).send({ message: "Category exists" });
@@ -16,7 +16,7 @@ export const CategoryCreateController = async (req: Request, res: Response) => {
   }
 
   const newCategory = await FoodCategoryModel.create({
-    catergoryName,
+    categoryName,
   });
 
   const foodCategoryId = newCategory.id;
